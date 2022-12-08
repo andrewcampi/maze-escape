@@ -16,7 +16,7 @@ import com.mygdx.maze.main.Driver;
 public class IntroScreen implements Screen {
 
     enum Screen{
-        ONE, TWO, THREE;
+        ONE, TWO, THREE, CONTROLS;
     }
 
     private Music introMusic;
@@ -24,6 +24,9 @@ public class IntroScreen implements Screen {
     private Texture knightImage;
     private Texture kingImage;
     private Texture throneImage;
+    private Texture guardImage;
+    private Texture guard2Image;
+    private Texture gateImage;
     private BitmapFont font;
     private Texture castleImage;
     private BitmapFont font2;
@@ -38,6 +41,9 @@ public class IntroScreen implements Screen {
         kingImage = new Texture(Gdx.files.internal("evilking.png"));
         throneImage = new Texture(Gdx.files.internal("throne.png"));
         castleImage = new Texture(Gdx.files.internal("castle3.png"));
+        guardImage = new Texture(Gdx.files.internal("guard.png"));
+        guard2Image = new Texture(Gdx.files.internal("guard2.png"));
+        gateImage = new Texture(Gdx.files.internal("gate.png"));
         font = new BitmapFont(Gdx.files.internal("font2.fnt"));
         font2 = new BitmapFont();
         font.setColor(Color.WHITE);
@@ -57,8 +63,11 @@ public class IntroScreen implements Screen {
                     currentScreen = Screen.THREE;
                 }
                 else if(currentScreen == Screen.THREE){
-                    introMusic.stop();
+                    currentScreen = Screen.CONTROLS;
+                }
+                else if(currentScreen == Screen.CONTROLS){
                     game.setScreen(new GameScreen());
+                    introMusic.stop();
                 }
         }
 
@@ -83,6 +92,15 @@ public class IntroScreen implements Screen {
                 font.draw(game.batch, "Sir George must now escape the castle", 10, 475);
                 font.draw(game.batch, "to deliver this information to his court!", 10, 45);
                 game.batch.draw(knightImage, 350, 50);
+            }
+            if(currentScreen == Screen.CONTROLS) {
+                game.batch.draw(knightImage, 550, 150);
+                game.batch.draw(guardImage, 250, 100);
+                game.batch.draw(guard2Image, 300, 100);
+                game.batch.draw(gateImage, 0, 100);
+                font.draw(game.batch, "Controls:\nW Key: Up\nA Key: Left\nS Key: Down\nD Key: Right", 400, 300);
+                font.draw(game.batch, "Escape the maze before your torch runs out!\nDon't let the guards see you! They'll sound" +
+                        " the\nalarm and the gates will close!", 25, 450);
             }
         game.batch.end();
 

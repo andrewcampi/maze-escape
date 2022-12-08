@@ -6,9 +6,8 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.viewport.FillViewport;
-import com.mygdx.maze.screen.GameScreen;
 import com.mygdx.maze.Settings;
-import com.mygdx.maze.screen.IntroScreen;
+import com.mygdx.maze.screen.TitleScreen;
 
 public class Driver extends Game
 {
@@ -35,7 +34,7 @@ public class Driver extends Game
 		camera.setToOrtho(true, global_settings.getCameraZoomWidth(), global_settings.getCameraZoomHeight());
 		viewport = new FillViewport(global_settings.getCameraZoomWidth(), global_settings.getCameraZoomHeight(), camera);
 
-		this.setScreen(new IntroScreen(this));
+		this.setScreen(new TitleScreen(this));
 	}
 
 	@Override
