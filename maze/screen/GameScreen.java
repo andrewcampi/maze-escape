@@ -127,7 +127,7 @@ public class GameScreen implements Screen
 		if(this.player.getTile().getRow() == this.maze.getExit().getRow()
 				&& this.player.getTile().getColumn() == this.maze.getExit().getColumn())
 		{
-			System.out.println("Victory!")
+			System.out.println("Victory!");
 			this.createMaze(this.tileType, this.genType, this.mazeWidth, this.mazeHeight);
 		}
 	}
