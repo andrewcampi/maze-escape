@@ -31,12 +31,10 @@ public class IntroScreen implements Screen {
     private Texture castleImage;
     private BitmapFont font2;
     Screen currentScreen;
-
     public IntroScreen(final Driver gam) {
         this.game = gam;
         introMusic = Gdx.audio.newMusic(Gdx.files.internal("The Salt Crags (LOOP).wav"));
         introMusic.setLooping(true);
-
         knightImage = new Texture(Gdx.files.internal("sirgeorge.png"));
         kingImage = new Texture(Gdx.files.internal("evilking.png"));
         throneImage = new Texture(Gdx.files.internal("throne.png"));
@@ -49,12 +47,10 @@ public class IntroScreen implements Screen {
         font.setColor(Color.WHITE);
         currentScreen = Screen.ONE;
     }
-
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0, .25f, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
         if(Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY)){
                 if(currentScreen == Screen.ONE){
                     currentScreen = Screen.TWO;
@@ -78,7 +74,6 @@ public class IntroScreen implements Screen {
                 font.draw(game.batch, "Is on an important Mission!", 25, 150);
                 game.batch.draw(knightImage, 250, 200);
             }
-
             if(currentScreen == Screen.TWO) {
                 game.batch.draw(throneImage, 0, 50);
                 font.draw(game.batch, "Undercover in the Enemy Castle,", 10, 475);

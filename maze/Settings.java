@@ -16,8 +16,12 @@ public class Settings {
   public int settings_playerCurrentXPosition = 0; // Default = 0
   public int settings_playerCurrentYPosition = 0; // Default = 0
   public float settings_current_torch_fuel = 1.0f; // Default = 1.0f
-  public int settings_total_fuel_pickups = 4; // Default = 8
-  public float settings_torch_fuel_pickup_power = 0.5f; // Default = 0.5f;
+  public int settings_total_fuel_pickups = 7; // Default = 8
+  public float settings_torch_fuel_pickup_power = 0.5f; // Default = 0.5f
+  public int settings_total_enemy_guards = 7; // Default = 7
+  public float settings_gate_timer_total_seconds = 30.f; // Default = 30.0f
+  public float settings_seconds_left_to_escape = this.settings_gate_timer_total_seconds;
+  public boolean settings_was_spotted_by_guard = false; // Default = false
 
   private static Settings instance = null;
 
@@ -75,5 +79,18 @@ public class Settings {
 
   public void setTorchFuelPickupPower(int givenTorchFuelPickupPower) { this.settings_torch_fuel_pickup_power = givenTorchFuelPickupPower; }
   public float getTorchFuelPickupPower() { return this.settings_torch_fuel_pickup_power; }
+
+  public void setTotalEnemyGuards(int givenTotalEnemyGuards) { this.settings_total_enemy_guards = givenTotalEnemyGuards; }
+  public int getTotalEnemyGuards() { return this.settings_total_enemy_guards; }
+
+  public void setGateTimerTotalSeconds(float givenGateTimerTotalSeconds) { this.settings_gate_timer_total_seconds = givenGateTimerTotalSeconds; }
+  public float getGateTimerTotalSeconds() { return this.settings_gate_timer_total_seconds; }
+
+  public void setSecondsLeftToEscape(float givenSecondsLeftToEscape) { this.settings_seconds_left_to_escape = givenSecondsLeftToEscape; }
+  public float getSecondsLeftToEscape() { return this.settings_seconds_left_to_escape; }
+
+  public void setAsSpottedByGuard() { this.settings_was_spotted_by_guard = true; }
+  public void setAsNotSpottedByGuard() { this.settings_was_spotted_by_guard = false; }
+  public boolean checkIfSpottedByGuard() { return this.settings_was_spotted_by_guard; }
 
 }

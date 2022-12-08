@@ -6,6 +6,7 @@ import java.time.temporal.ValueRange;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.graphics.Color;
@@ -14,14 +15,23 @@ import com.mygdx.maze.maze.Maze;
 import com.mygdx.maze.maze.MazeDrawerSquare;
 import com.mygdx.maze.maze.Tile;
 import com.mygdx.maze.maze.TileType;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.mygdx.maze.box2dLight.RayHandler;
 import com.mygdx.maze.box2dLight.PointLight;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.math.Vector2;
 import com.mygdx.maze.Settings;
+import com.mygdx.maze.sprites.EnemySprite;
+import com.mygdx.maze.sprites.PlayerDownSprite;
+import com.mygdx.maze.sprites.PlayerLeftSprite;
+import com.mygdx.maze.sprites.PlayerRightSprite;
+import com.mygdx.maze.sprites.PlayerUpSprite;
 import com.mygdx.maze.ui.FuelBar;
 import com.mygdx.maze.interactables.FuelPickup;
+import com.mygdx.maze.interactables.EnemyGuard;
 
 public class EntityPlayer extends Entity
 {
@@ -36,7 +46,29 @@ public class EntityPlayer extends Entity
 	int playerCurrentXPosition;
 	int playerCurrentYPosition;
 	ArrayList<FuelPickup> fuelPickups = new ArrayList<FuelPickup>();
+	ArrayList<EnemyGuard> enemyGuards = new ArrayList<EnemyGuard>();
 	MazeDrawerSquare drawer = (MazeDrawerSquare) this.maze.getDrawer();
+	Random random = new Random();
+	private BitmapFont font;
+
+// *** Arielle Added - Sprites ***
+
+  	  private SpriteBatch batch;
+
+	  private EnemySprite enemy;
+	  private PlayerDownSprite playerDown;
+	  private PlayerLeftSprite playerLeft;
+	  private PlayerRightSprite playerRight;
+	  private PlayerUpSprite playerUp;
+
+// *** Arielle Added - Sounds ***
+	Sound pickupSound;
+	Sound walkingSound;
+	Sound walkW;
+	Sound walkA;
+	Sound walkS;
+	Sound walkD;
+	Sound danger;
 
 	public EntityPlayer(Maze maze, Tile tile)
 	{
@@ -48,13 +80,25 @@ public class EntityPlayer extends Entity
 		fuelBar.setPosition(10, 20);
 		stage.addActor(fuelBar);
 		// Randomly generate the fuel pickups
-		Random random = new Random();
 		for (int index=0; index < global_settings.getTotalFuelPickups(); index++) {
       int thisRandomXPosition = random.nextInt(global_settings.getMazeWidth() * global_settings.getWallThickness());
 			int thisRandomYPosition = random.nextInt(global_settings.getMazeHeight() * global_settings.getWallThickness());
 			FuelPickup thisFuelPickup = new FuelPickup(thisRandomXPosition, thisRandomYPosition);
 			fuelPickups.add(thisFuelPickup);
 		}
+		// Randomly generate the enemy guards
+		for (int index=0; index < global_settings.getTotalEnemyGuards(); index++) {
+      int thisRandomXPosition = random.nextInt(global_settings.getMazeWidth() * global_settings.getWallThickness());
+			int thisRandomYPosition = random.nextInt(global_settings.getMazeHeight() * global_settings.getWallThickness());
+			EnemyGuard thisEnemyGuard = new EnemyGuard(thisRandomXPosition, thisRandomYPosition);
+			enemyGuards.add(thisEnemyGuard);
+		}
+		// Render the gate close timer text
+		batch = new SpriteBatch();
+
+
+    font = new BitmapFont();
+    font.setColor(Color.WHITE);
 	}
 
 	@Override
@@ -69,6 +113,10 @@ public class EntityPlayer extends Entity
 	{
 		// Draw the player
 		this.drawPlayer();
+// *** Arielle Added ***
+		// This was my idea but it isn't working
+		//this.drawPlayerSprite();
+
 		playerCurrentXPosition = (int) this.maze.getDrawer().getTileCenterX(this.tile.getRow(), this.tile.getColumn()) - drawer.getTileSize() / 6;
 		playerCurrentYPosition = (int) this.maze.getDrawer().getTileCenterY(this.tile.getRow(), this.tile.getColumn()) - drawer.getTileSize() / 6;
 		// Draw fuel pickups
@@ -84,6 +132,10 @@ public class EntityPlayer extends Entity
 				ValueRange yRange = ValueRange.of(fuelPickups.get(index).getYPosition() - 30, fuelPickups.get(index).getYPosition() + 30);
 				if (xRange.isValidIntValue(playerCurrentXPosition)) {
 					if (yRange.isValidIntValue(playerCurrentYPosition)) {
+// *** Arielle Added (torch pickup sound) ***
+						pickupSound = Gdx.audio.newSound(Gdx.files.internal("sounds/beep_sound.wav"));
+						pickupSound.play();
+
 						fuelPickups.get(index).setAsUsed();
 						global_settings.setCurrentTorchFuel(global_settings.getCurrentTorchFuel() + global_settings.getTorchFuelPickupPower());
 						if (global_settings.getCurrentTorchFuel() > 1.0f) {
@@ -97,15 +149,52 @@ public class EntityPlayer extends Entity
 				}
 			}
 		}
+		// Draw enemy guards
+		for (int index=0; index < enemyGuards.size(); index++) {
+			// Check if the fuel pickup was not already used
+			if (!global_settings.checkIfSpottedByGuard()) {
+				Driver.shape.begin(ShapeType.Filled);
+				Driver.shape.setColor(Color.RED);
+				Driver.shape.rect(enemyGuards.get(index).getXPosition(), enemyGuards.get(index).getYPosition(), 10, 10);
+				Driver.shape.end();
+				// Check if player is near a not used fuel pickup
+				ValueRange xRange = ValueRange.of(enemyGuards.get(index).getXPosition() - 30, enemyGuards.get(index).getXPosition() + 30);
+				ValueRange yRange = ValueRange.of(enemyGuards.get(index).getYPosition() - 30, enemyGuards.get(index).getYPosition() + 30);
+				if (xRange.isValidIntValue(playerCurrentXPosition)) {
+					if (yRange.isValidIntValue(playerCurrentYPosition)) {
+						global_settings.setAsSpottedByGuard();
+						System.out.println("Spotted!");
+// *** Arielle Added (torch pickup sound) ***
+						danger = Gdx.audio.newSound(Gdx.files.internal("sounds/danger.wav"));
+						danger.play();
+					}
+				}
+			}
+		}
 		// Render the light
 		radius = global_settings.getLightRadius();
 		world = new World(new Vector2(0,0),false);
 		rayHandler = new RayHandler(world);
-		new PointLight(rayHandler,500,Color.WHITE,radius,x_position,y_position);
+		new PointLight(rayHandler,500,Color.ORANGE,radius,x_position,y_position);
 		rayHandler.updateAndRender();
-		//Draw fuel bar (AFTER rendering the light so you can always see it)
+ 		//Draw fuel bar (AFTER rendering the light so you can always see it)
 		stage.draw();
 		stage.act();
+		// Draw the gate close timer (AFTER rendering the light so you can always see it)
+		if (global_settings.checkIfSpottedByGuard()) {
+			batch.begin();
+			font.draw(batch, "Escape before the gate closes!", 100, 450);
+	    font.draw(batch, String.valueOf(global_settings.getSecondsLeftToEscape()), 350, 450);
+			global_settings.setSecondsLeftToEscape(global_settings.getSecondsLeftToEscape() - 0.01f); // Subtract one frame seconds
+	    batch.end();
+		}
+		// Check if the player loses
+		if (global_settings.getSecondsLeftToEscape() <= 0) {
+			System.out.println("Defeat!");
+		}
+		if (global_settings.getCurrentTorchFuel() <= 0) {
+			System.out.println("Defeat!");
+		}
 	}
 
 	private void handlePlayerMovement()
@@ -124,6 +213,9 @@ public class EntityPlayer extends Entity
 				global_settings.setLightRadius(global_settings.getLightRadius() - global_settings.getLightShrinkSpeed());
 				global_settings.setCurrentTorchFuel(global_settings.getCurrentTorchFuel() - global_settings.getLightShrinkSpeed());
 				fuelBar.setValue(global_settings.getCurrentTorchFuel());
+// *** Arielle Added (walk sound) ***
+				walkW = Gdx.audio.newSound(Gdx.files.internal("sounds/walk_w.wav"));
+				walkW.play();
 			}
 		}
 		else if(Gdx.input.isKeyJustPressed(Keys.A)) // WEST MOVEMENT
@@ -134,6 +226,9 @@ public class EntityPlayer extends Entity
 				global_settings.setLightRadius(global_settings.getLightRadius() - global_settings.getLightShrinkSpeed());
 				global_settings.setCurrentTorchFuel(global_settings.getCurrentTorchFuel() - global_settings.getLightShrinkSpeed());
 				fuelBar.setValue(global_settings.getCurrentTorchFuel());
+// *** Arielle Added (walk sound) ***
+				walkA = Gdx.audio.newSound(Gdx.files.internal("sounds/walk_a.wav"));
+				walkA.play();
 			}
 		}
 		else if(Gdx.input.isKeyJustPressed(Keys.S)) // SOUTH MOVEMENT
@@ -144,6 +239,9 @@ public class EntityPlayer extends Entity
 				global_settings.setLightRadius(global_settings.getLightRadius() - global_settings.getLightShrinkSpeed());
 				global_settings.setCurrentTorchFuel(global_settings.getCurrentTorchFuel() - global_settings.getLightShrinkSpeed());
 				fuelBar.setValue(global_settings.getCurrentTorchFuel());
+// *** Arielle Added (walk sound) ***
+				walkS = Gdx.audio.newSound(Gdx.files.internal("sounds/walk_s.wav"));
+				walkS.play();
 			}
 		}
 		else if(Gdx.input.isKeyJustPressed(Keys.D)) // EAST MOVEMENT
@@ -154,6 +252,9 @@ public class EntityPlayer extends Entity
 				global_settings.setLightRadius(global_settings.getLightRadius() - global_settings.getLightShrinkSpeed());
 				global_settings.setCurrentTorchFuel(global_settings.getCurrentTorchFuel() - global_settings.getLightShrinkSpeed());
 				fuelBar.setValue(global_settings.getCurrentTorchFuel());
+// *** Arielle Added (walk sound) ***
+				walkD = Gdx.audio.newSound(Gdx.files.internal("sounds/walk_d.wav"));
+				walkD.play();
 			}
 		}
 	}
@@ -180,6 +281,13 @@ public class EntityPlayer extends Entity
 				drawer.getTileSize() / 2,
 				drawer.getTileSize() / 2);
 		Driver.shape.end();
+	}
+
+	private void drawPlayerSprite() {
+		playerDown = new PlayerDownSprite();
+		playerDown.draw(batch);
+		playerDown.setPosition(this.maze.getDrawer().getTileCenterX(this.tile.getRow(), this.tile.getColumn()), this.maze.getDrawer().getTileCenterY(this.tile.getRow(), this.tile.getColumn()));
+
 	}
 
 	@Override
